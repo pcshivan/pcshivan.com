@@ -4,4 +4,4 @@ compatibility_date = "2025-07-11" # Use today's date or a recent date
 
 [site]
 bucket = "./build" # This tells Wrangler to deploy the contents of your React build directory
-entry-point = "."  # Points to the root of your project where `package.json` is
+# entry-point = "."  # Points to the root of your project where `package.json` is
