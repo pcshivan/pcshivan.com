@@ -1,3 +1,5 @@
+// File: src/utils/themes.js
+// Centralized theme definitions
 export const themes = {
   'dark-purple': {
     id: 'dark-purple', // Add id for easier lookup
