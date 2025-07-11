@@ -2,12 +2,13 @@
   "name": "pcshivan-website",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": ".",  
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
     "firebase": "^10.12.2",
+    "react-router-dom": "^6.22.1",
     "@cloudflare/kv-asset-handler": "^0.3.0"
   },
   "devDependencies": {
@@ -18,7 +19,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy-worker": "npx wrangler deploy"
+    "deploy-worker": "npx wrangler deploy" 
   },
   "eslintConfig": {
     "extends": [
