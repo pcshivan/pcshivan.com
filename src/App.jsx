@@ -2,13 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from 'firebase/firestore'; // 'orderBy' removed from import
+import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from 'firebase/firestore';
 
-// Ensure these global variables are defined in the Canvas environment
-// ESLint is now aware of these globals due to the comment above.
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+// Firebase configuration for deployed environment (read from environment variables)
+// Safely access process.env, providing fallbacks if 'process' is not defined (e.g., in browser/Worker runtime)
+const deployedAppId = (typeof process !== 'undefined' && process.env.REACT_APP_APP_ID) ? process.env.REACT_APP_APP_ID : 'default-app-id-deployed';
+const deployedFirebaseConfig = (typeof process !== 'undefined' && process.env.REACT_APP_FIREBASE_CONFIG) ? JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG) : {};
+
+// Use Canvas globals if available (for Canvas environment), otherwise use deployed values
+const appId = typeof __app_id !== 'undefined' ? __app_id : deployedAppId;
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : deployedFirebaseConfig;
+// __initial_auth_token is specific to Canvas; for deployed app, rely on standard Firebase auth flow
 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
 
 // Initialize Firebase outside of the component to avoid re-initialization
 let app;
@@ -45,10 +51,10 @@ const SocialIcon = ({ href, iconClass, label }) => (
 
 // SectionWrapper for consistent section styling with layered background and subtle animation
 const SectionWrapper = ({ id, title, children }) => (
-  <section id={id} className="relative py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-br from-gray-900 to-black text-white min-h-screen flex flex-col justify-center items-center overflow-hidden">
+  <section id={id} className="relative py-20 px-4 md:px-8 lg:px-16 bg-gradient-to-br from-theme-bg-start to-theme-bg-end text-theme-text min-h-screen flex flex-col justify-center items-center overflow-hidden">
     {/* Subtle geometric background pattern for layering and depth */}
     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%239C92AC\" fill-opacity=\"0.1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')" }}></div>
-    <h2 className="relative z-10 text-5xl md:text-6xl font-extrabold mb-12 text-center text-purple-400 drop-shadow-lg font-cinzel tracking-wide animate-fade-in-up-slow">
+    <h2 className="relative z-10 text-5xl md:text-6xl font-extrabold mb-12 text-center text-theme-accent drop-shadow-lg font-cinzel tracking-wide animate-fade-in-up-slow">
       {title}
     </h2>
     <div className="relative z-10 max-w-6xl w-full">
@@ -58,12 +64,12 @@ const SectionWrapper = ({ id, title, children }) => (
 );
 
 // Modal component for contact forms with improved animations
-const Modal = ({ isOpen, onClose, children }) => {
+const Modal = ({ isOpen, onClose, children, themeClasses }) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-gray-800 rounded-xl p-8 max-w-lg w-full relative shadow-2xl border border-purple-600 animate-scale-in">
+      <div className={`${themeClasses.modalBg} rounded-xl p-8 max-w-lg w-full relative shadow-2xl border ${themeClasses.modalBorder} animate-scale-in`}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white text-3xl font-bold transition-colors duration-300 cursor-pointer"
@@ -78,7 +84,7 @@ const Modal = ({ isOpen, onClose, children }) => {
 };
 
 // Message Box component for alerts/confirmations with improved animations
-const MessageBox = ({ message, type, onClose }) => {
+const MessageBox = ({ message, type, onClose, themeClasses }) => {
   if (!message) return null;
 
   const bgColor = type === 'success' ? 'bg-green-700' : 'bg-red-700';
@@ -100,22 +106,78 @@ const MessageBox = ({ message, type, onClose }) => {
   );
 };
 
+// --- Theme Definitions ---
+const themes = {
+  'dark-purple': {
+    name: 'Dark Purple',
+    bodyBg: 'bg-gray-950',
+    headerBg: 'bg-gray-900',
+    headerText: 'text-white',
+    headerHover: 'hover:text-purple-400',
+    footerBg: 'bg-gradient-to-t from-gray-950 to-gray-900',
+    footerBorder: 'border-purple-800',
+    mainText: 'text-gray-300',
+    accentText: 'text-purple-400',
+    buttonPrimaryBg: 'bg-gradient-to-r from-purple-600 to-indigo-700',
+    buttonPrimaryHover: 'hover:from-purple-700 hover:to-indigo-800',
+    buttonPrimaryBorder: 'border-purple-400',
+    buttonSpotifyBg: 'bg-gradient-to-r from-green-500 to-teal-600',
+    buttonSpotifyHover: 'hover:from-green-600 hover:to-teal-700',
+    buttonSpotifyBorder: 'border-green-300',
+    cardBg: 'bg-gray-800',
+    cardBorder: 'border-purple-700',
+    inputBg: 'bg-gray-700',
+    inputBorder: 'border-gray-600',
+    inputFocusBorder: 'focus:border-purple-500',
+    modalBg: 'bg-gray-800',
+    modalBorder: 'border-purple-600',
+    themeBgStart: 'gray-900',
+    themeBgEnd: 'black',
+  },
+  'dark-blue': {
+    name: 'Dark Blue',
+    bodyBg: 'bg-blue-950',
+    headerBg: 'bg-blue-900',
+    headerText: 'text-white',
+    headerHover: 'hover:text-cyan-400',
+    footerBg: 'bg-gradient-to-t from-blue-950 to-blue-900',
+    footerBorder: 'border-cyan-800',
+    mainText: 'text-blue-200',
+    accentText: 'text-cyan-400',
+    buttonPrimaryBg: 'bg-gradient-to-r from-blue-600 to-indigo-700',
+    buttonPrimaryHover: 'hover:from-blue-700 hover:to-indigo-800',
+    buttonPrimaryBorder: 'border-blue-400',
+    buttonSpotifyBg: 'bg-gradient-to-r from-green-500 to-teal-600',
+    buttonSpotifyHover: 'hover:from-green-600 hover:to-teal-700',
+    buttonSpotifyBorder: 'border-green-300',
+    cardBg: 'bg-blue-800',
+    cardBorder: 'border-cyan-700',
+    inputBg: 'bg-blue-700',
+    inputBorder: 'border-blue-600',
+    inputFocusBorder: 'focus:border-cyan-500',
+    modalBg: 'bg-blue-800',
+    modalBorder: 'border-cyan-600',
+    themeBgStart: 'blue-900',
+    themeBgEnd: 'black',
+  },
+};
+
 // --- Page Components ---
 
-const HomePage = ({ scrollToSection }) => (
+const HomePage = ({ scrollToSection, themeClasses }) => (
   <section id="home" className="relative h-screen flex items-center justify-center bg-cover bg-center overflow-hidden" style={{ backgroundImage: "url('https://placehold.co/1920x1080/1a1a2e/e0b0ff?text=PC+SHIVAN+MUSIC')" }}>
     {/* Dynamic background overlay for artistic effect with subtle pulse */}
-    <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900/50 to-black opacity-80 animate-pulse-subtle"></div>
-    <div className="relative z-10 text-center text-white p-8 rounded-xl bg-gradient-to-br from-gray-900/80 to-black/80 shadow-2xl border border-purple-700 max-w-4xl mx-4 transform animate-fade-in-up-hero">
+    <div className="absolute inset-0 bg-gradient-to-br from-black via-theme-accent-900/50 to-black opacity-80 animate-pulse-subtle"></div>
+    <div className="relative z-10 text-center text-white p-8 rounded-xl bg-gradient-to-br from-gray-900/80 to-black/80 shadow-2xl border ${themeClasses.cardBorder} max-w-4xl mx-4 transform animate-fade-in-up-hero">
       <h1 className="text-6xl md:text-8xl font-extrabold mb-4 leading-tight drop-shadow-lg font-cinzel tracking-wider">
         PC SHIVAN
       </h1>
-      <p className="text-2xl md:text-3xl font-light text-purple-300 mb-8 font-inter italic">
+      <p className="text-2xl md:text-3xl font-light ${themeClasses.accentText} mb-8 font-inter italic">
         Innovative Music Composer | Artist | Visionary
       </p>
       <button
         onClick={() => scrollToSection('music')}
-        className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-4 px-10 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl border border-purple-400 cursor-pointer"
+        className={`${themeClasses.buttonPrimaryBg} ${themeClasses.buttonPrimaryHover} text-white font-bold py-4 px-10 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl border ${themeClasses.buttonPrimaryBorder} cursor-pointer`}
       >
         Explore My Music
       </button>
@@ -123,17 +185,17 @@ const HomePage = ({ scrollToSection }) => (
   </section>
 );
 
-const AboutPage = () => (
-  <SectionWrapper id="about" title="About PC Shivan">
+const AboutPage = ({ themeClasses }) => (
+  <SectionWrapper id="about" title="About PC Shivan" themeClasses={themeClasses}>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
       <div className="flex justify-center animate-fade-in-left-slow">
         <img
           src="https://placehold.co/500x500/333333/e0b0ff?text=PC+Shivan+Portrait"
           alt="PC Shivan Portrait"
-          className="rounded-full shadow-2xl border-4 border-purple-600 object-cover w-64 h-64 md:w-80 md:h-80 transform hover:scale-105 transition-transform duration-300"
+          className="rounded-full shadow-2xl border-4 ${themeClasses.buttonPrimaryBorder} object-cover w-64 h-64 md:w-80 md:h-80 transform hover:scale-105 transition-transform duration-300"
         />
       </div>
-      <div className="text-lg leading-relaxed text-gray-300 animate-fade-in-right-slow">
+      <div className={`text-lg leading-relaxed ${themeClasses.mainText} animate-fade-in-right-slow`}>
         <p className="mb-6">
           PC Shivan is a visionary music composer who seamlessly blends traditional melodies with cutting-edge soundscapes, creating a unique auditory experience. With a passion for innovation and a keen ear for detail, Shivan crafts music that resonates deeply with listeners, pushing the boundaries of contemporary composition.
         </p>
@@ -148,7 +210,7 @@ const AboutPage = () => (
   </SectionWrapper>
 );
 
-const MusicPage = () => {
+const MusicPage = ({ themeClasses }) => {
   const musicTracks = [
     {
       id: '1',
@@ -180,16 +242,16 @@ const MusicPage = () => {
   ];
 
   return (
-    <SectionWrapper id="music" title="My Music">
+    <SectionWrapper id="music" title="My Music" themeClasses={themeClasses}>
       <div className="text-center mb-12 animate-fade-in-up-slow">
-        <p className="text-xl text-gray-300 mb-6">
+        <p className={`text-xl ${themeClasses.mainText} mb-6`}>
           Dive into my latest compositions and explore my diverse musical universe.
         </p>
         <a
           href="https://open.spotify.com/artist/pcshivanofficial"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg border border-green-300 cursor-pointer"
+          className={`${themeClasses.buttonSpotifyBg} ${themeClasses.buttonSpotifyHover} text-white font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg border ${themeClasses.buttonSpotifyBorder} cursor-pointer`}
         >
           <i className="fab fa-spotify mr-2"></i> Listen on Spotify
         </a>
@@ -197,17 +259,17 @@ const MusicPage = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {musicTracks.map((track, index) => (
-          <div key={track.id} className="bg-gray-800 rounded-xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 border border-purple-700 group animate-fade-in-item" style={{ animationDelay: `${index * 0.15}s` }}>
+          <div key={track.id} className={`${themeClasses.cardBg} rounded-xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 border ${themeClasses.cardBorder} group animate-fade-in-item`} style={{ animationDelay: `${index * 0.15}s` }}>
             <img
               src={track.imageUrl}
               alt={track.title}
               className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
             />
             <div className="p-6">
-              <h3 className="text-3xl font-bold text-purple-400 mb-2 font-cinzel">{track.title}</h3>
-              <p className="text-gray-400 text-lg mb-4 font-inter">{track.artist} - {track.genre}</p>
+              <h3 className={`text-3xl font-bold ${themeClasses.accentText} mb-2 font-cinzel`}>{track.title}</h3>
+              <p className={`text-gray-400 text-lg mb-4 font-inter`}>{track.artist} - {track.genre}</p>
               {track.spotifyEmbed && (
-                <div className="mb-4 rounded-lg overflow-hidden border border-gray-700">
+                <div className={`mb-4 rounded-lg overflow-hidden border ${themeClasses.inputBorder}`}>
                   <iframe
                     style={{ borderRadius: '12px' }}
                     src={track.spotifyEmbed}
@@ -225,7 +287,7 @@ const MusicPage = () => {
                 href={track.buyLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full text-center bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 transform hover:scale-105 shadow-md cursor-pointer"
+                className={`block w-full text-center ${themeClasses.buttonPrimaryBg} ${themeClasses.buttonPrimaryHover} text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 transform hover:scale-105 shadow-md cursor-pointer`}
               >
                 Buy Now
               </a>
@@ -237,7 +299,7 @@ const MusicPage = () => {
   );
 };
 
-const MerchPage = () => {
+const MerchPage = ({ themeClasses }) => {
   const merchItems = [
     {
       id: 'm1',
@@ -263,26 +325,26 @@ const MerchPage = () => {
   ];
 
   return (
-    <SectionWrapper id="merch" title="Merchandise">
-      <p className="text-xl text-gray-300 text-center mb-12 animate-fade-in-up-slow">
+    <SectionWrapper id="merch" title="Merchandise" themeClasses={themeClasses}>
+      <p className={`text-xl ${themeClasses.mainText} text-center mb-12 animate-fade-in-up-slow`}>
         Show your support and grab some exclusive PC Shivan merchandise!
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {merchItems.map((item, index) => (
-          <div key={item.id} className="bg-gray-800 rounded-xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 border border-purple-700 group animate-fade-in-item" style={{ animationDelay: `${index * 0.15}s` }}>
+          <div key={item.id} className={`${themeClasses.cardBg} rounded-xl shadow-xl overflow-hidden transform transition-all duration-300 hover:scale-105 border ${themeClasses.cardBorder} group animate-fade-in-item`} style={{ animationDelay: `${index * 0.15}s` }}>
             <img
               src={item.imageUrl}
               alt={item.name}
               className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-110"
             />
             <div className="p-6 text-center">
-              <h3 className="text-3xl font-bold text-purple-400 mb-2 font-cinzel">{item.name}</h3>
-              <p className="text-gray-300 text-2xl mb-4 font-inter">{item.price}</p>
+              <h3 className={`text-3xl font-bold ${themeClasses.accentText} mb-2 font-cinzel`}>{item.name}</h3>
+              <p className={`text-gray-300 text-2xl mb-4 font-inter`}>{item.price}</p>
               <a
                 href={item.buyLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full text-center bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 transform hover:scale-105 shadow-md cursor-pointer"
+                className={`block w-full text-center ${themeClasses.buttonPrimaryBg} ${themeClasses.buttonPrimaryHover} text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 transform hover:scale-105 shadow-md cursor-pointer`}
               >
                 Buy Now
               </a>
@@ -294,30 +356,30 @@ const MerchPage = () => {
   );
 };
 
-const ContactPage = ({ openContactModal }) => (
-  <SectionWrapper id="contact" title="Contact Me">
-    <p className="text-xl text-gray-300 text-center mb-12 animate-fade-in-up-slow">
+const ContactPage = ({ openContactModal, themeClasses }) => (
+  <SectionWrapper id="contact" title="Contact Me" themeClasses={themeClasses}>
+    <p className={`text-xl ${themeClasses.mainText} text-center mb-12 animate-fade-in-up-slow`}>
       Whether you're a fan, a producer, a director, or a corporate entity, I'd love to hear from you.
       Please select the most relevant option below.
     </p>
     <div className="flex flex-wrap justify-center gap-6">
       <button
         onClick={() => openContactModal('general')}
-        className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl w-full md:w-auto border border-purple-400 animate-fade-in-up-slow"
+        className={`${themeClasses.buttonPrimaryBg} ${themeClasses.buttonPrimaryHover} text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl w-full md:w-auto border ${themeClasses.buttonPrimaryBorder} animate-fade-in-up-slow`}
         style={{ animationDelay: '0.1s' }}
       >
         <i className="fas fa-envelope mr-3"></i> General Inquiry
       </button>
       <button
         onClick={() => openContactModal('producer-director')}
-        className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl w-full md:w-auto border border-purple-400 animate-fade-in-up-slow"
+        className={`${themeClasses.buttonPrimaryBg} ${themeClasses.buttonPrimaryHover} text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl w-full md:w-auto border ${themeClasses.buttonPrimaryBorder} animate-fade-in-up-slow`}
         style={{ animationDelay: '0.2s' }}
       >
         <i className="fas fa-microphone-alt mr-3"></i> Producers & Directors
       </button>
       <button
         onClick={() => openContactModal('corporate')}
-        className="bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl w-full md:w-auto border border-purple-400 animate-fade-in-up-slow"
+        className={`${themeClasses.buttonPrimaryBg} ${themeClasses.buttonPrimaryHover} text-white font-bold py-4 px-8 rounded-full text-xl transition-all duration-300 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-xl w-full md:w-auto border ${themeClasses.buttonPrimaryBorder} animate-fade-in-up-slow`}
         style={{ animationDelay: '0.3s' }}
       >
         <i className="fas fa-building mr-3"></i> Corporate & Licensing
@@ -326,7 +388,7 @@ const ContactPage = ({ openContactModal }) => (
   </SectionWrapper>
 );
 
-const TestimonialsPage = ({ userId, db }) => {
+const TestimonialsPage = ({ userId, db, themeClasses }) => {
   const [testimonials, setTestimonials] = useState([]);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
@@ -339,8 +401,6 @@ const TestimonialsPage = ({ userId, db }) => {
     }
 
     const testimonialsCollectionRef = collection(db, `artifacts/${appId}/public/data/testimonials`);
-    // Removed orderBy('timestamp', 'desc') to avoid potential index issues on initial deployment.
-    // Data will be sorted in memory.
     const q = query(testimonialsCollectionRef);
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -391,46 +451,52 @@ const TestimonialsPage = ({ userId, db }) => {
     return rotations[Math.floor(Math.random() * rotations.length)];
   };
 
+  // Dynamically get random background color based on current theme's palette
   const getRandomBgColor = () => {
-    const colors = ['bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 'bg-pink-800'];
-    return colors[Math.floor(Math.random() * colors.length)];
+    const defaultColors = ['bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 'bg-pink-800'];
+    const themeSpecificColors = {
+      'dark-purple': ['bg-purple-800', 'bg-indigo-800', 'bg-gray-700'],
+      'dark-blue': ['bg-blue-800', 'bg-cyan-800', 'bg-gray-700'],
+    };
+    const availableColors = themeSpecificColors[themeClasses.id] || defaultColors;
+    return availableColors[Math.floor(Math.random() * availableColors.length)];
   };
 
   return (
-    <SectionWrapper id="testimonials" title="Fan Love & Testimonials">
-      <p className="text-xl text-gray-300 text-center mb-12 animate-fade-in-up-slow">
+    <SectionWrapper id="testimonials" title="Fan Love & Testimonials" themeClasses={themeClasses}>
+      <p className={`text-xl ${themeClasses.mainText} text-center mb-12 animate-fade-in-up-slow`}>
         Your words inspire me! Share your thoughts and become a part of the PC Shivan community.
       </p>
 
-      <form onSubmit={handleSubmitTestimonial} className="bg-gray-800 p-8 rounded-xl shadow-xl mb-12 border border-purple-700 max-w-2xl mx-auto animate-fade-in-up-slow">
-        <h3 className="text-3xl font-bold text-purple-400 mb-6 text-center font-cinzel">Leave a Testimonial</h3>
+      <form onSubmit={handleSubmitTestimonial} className={`${themeClasses.cardBg} p-8 rounded-xl shadow-xl mb-12 border ${themeClasses.cardBorder} max-w-2xl mx-auto animate-fade-in-up-slow`}>
+        <h3 className={`text-3xl font-bold ${themeClasses.accentText} mb-6 text-center font-cinzel`}>Leave a Testimonial</h3>
         <div className="mb-6">
-          <label htmlFor="name" className="block text-gray-300 text-lg font-bold mb-2">Your Name:</label>
+          <label htmlFor="name" className={`block ${themeClasses.mainText} text-lg font-bold mb-2`}>Your Name:</label>
           <input
             type="text"
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full p-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 transition-colors duration-200"
+            className={`w-full p-4 rounded-lg ${themeClasses.inputBg} ${themeClasses.mainText} border ${themeClasses.inputBorder} focus:outline-none ${themeClasses.inputFocusBorder} transition-colors duration-200`}
             required
             placeholder="Enter your name"
           />
         </div>
         <div className="mb-6">
-          <label htmlFor="message" className="block text-gray-300 text-lg font-bold mb-2">Your Message:</label>
+          <label htmlFor="message" className={`block ${themeClasses.mainText} text-lg font-bold mb-2`}>Your Message:</label>
           <textarea
             id="message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             rows="5"
-            className="w-full p-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 resize-y transition-colors duration-200"
+            className={`w-full p-4 rounded-lg ${themeClasses.inputBg} ${themeClasses.mainText} border ${themeClasses.inputBorder} focus:outline-none ${themeClasses.inputFocusBorder} resize-y transition-colors duration-200`}
             required
             placeholder="Share your experience or thoughts..."
           ></textarea>
         </div>
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-4 px-6 rounded-lg text-xl transition-colors duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl border border-purple-400 cursor-pointer"
+          className={`w-full ${themeClasses.buttonPrimaryBg} ${themeClasses.buttonPrimaryHover} text-white font-bold py-4 px-6 rounded-lg text-xl transition-colors duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl border ${themeClasses.buttonPrimaryBorder} cursor-pointer`}
         >
           Submit Testimonial
         </button>
@@ -440,20 +506,21 @@ const TestimonialsPage = ({ userId, db }) => {
         message={showSubmissionMessage?.message}
         type={showSubmissionMessage?.type}
         onClose={() => setShowSubmissionMessage(null)}
+        themeClasses={themeClasses}
       />
 
       {testimonials.length === 0 ? (
-        <p className="text-center text-gray-400 text-xl">No testimonials yet. Be the first to leave one!</p>
+        <p className={`text-center ${themeClasses.mainText} text-xl`}>No testimonials yet. Be the first to leave one!</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial, index) => (
             <div
               key={testimonial.id}
-              className={`p-6 rounded-xl shadow-xl transform ${getRandomRotation()} ${getRandomBgColor()} text-white border border-gray-700 animate-fade-in-item`}
+              className={`p-6 rounded-xl shadow-xl transform ${getRandomRotation()} ${getRandomBgColor()} text-white border ${themeClasses.inputBorder} animate-fade-in-item`}
               style={{ minHeight: '200px', animationDelay: `${index * 0.15}s` }}
             >
               <p className="text-lg italic mb-4 font-inter">"{testimonial.message}"</p>
-              <p className="text-right text-purple-200 font-semibold font-inter">- {testimonial.name}</p>
+              <p className={`text-right ${themeClasses.accentText} font-semibold font-inter`}>- {testimonial.name}</p>
               {testimonial.userId && (
                 <p className="text-right text-xs text-gray-400 mt-2 font-inter">User ID: {testimonial.userId}</p>
               )}
@@ -475,11 +542,18 @@ const App = () => {
   const [userId, setUserId] = useState(null);
   const [messageBox, setMessageBox] = useState(null); // { type: 'success' | 'error', message: string }
 
+  // Theme state and persistence
+  const [currentThemeId, setCurrentThemeId] = useState(() => {
+    // Initialize theme from localStorage or default to 'dark-purple'
+    return localStorage.getItem('theme') || 'dark-purple';
+  });
+  const themeClasses = themes[currentThemeId];
+
   // Firebase Auth and DB Initialization
   useEffect(() => {
     const initializeFirebase = async () => {
       if (!auth || !db) {
-        setMessageBox({ type: 'error', message: 'Firebase is not configured correctly. Some features may not work.' });
+        setMessageBox({ type: 'error', message: 'Firebase is not configured correctly. Some features may not work. Please ensure REACT_APP_APP_ID and REACT_APP_FIREBASE_CONFIG environment variables are set in Cloudflare Pages.' });
         console.error("Firebase Auth or DB is not initialized. Check firebaseConfig and global variables.");
         return;
       }
@@ -505,12 +579,18 @@ const App = () => {
         });
       } catch (error) {
         console.error("Firebase authentication error:", error);
-        setMessageBox({ type: 'error', message: `Authentication failed: ${error.message}` });
+        setMessageBox({ type: 'error', message: `Authentication failed: ${error.message}. Please check your Firebase project setup and security rules.` });
       }
     };
 
     initializeFirebase();
   }, []); // Run only once on component mount
+
+  // Save theme preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('theme', currentThemeId);
+  }, [currentThemeId]);
+
 
   const navigate = (page) => {
     setCurrentPage(page);
@@ -566,7 +646,7 @@ const App = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 font-inter">
+    <div className={`min-h-screen ${themeClasses.bodyBg} font-inter transition-colors duration-500`}>
       {/* Font Awesome for icons */}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" xintegrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0V4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
       {/* Google Fonts for Inter and Cinzel */}
@@ -695,22 +775,77 @@ const App = () => {
         button, a {
           cursor: pointer;
         }
+
+        /* Theme slider specific styles */
+        .theme-slider-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            background-color: rgba(30, 30, 50, 0.8); /* Dark translucent background */
+            padding: 10px 15px;
+            border-radius: 9999px; /* Pill shape */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+            border: 1px solid rgba(128, 90, 213, 0.5); /* Purple border */
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+
+        .theme-slider-label {
+            color: #e0b0ff; /* Purple accent text */
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .theme-toggle-button {
+            width: 60px; /* Width of the toggle button */
+            height: 30px; /* Height of the toggle button */
+            background-color: #4a4a6a; /* Default track color */
+            border-radius: 15px; /* Half of height for pill shape */
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            padding: 0 3px;
+        }
+
+        .theme-toggle-button.active {
+            background-color: #6b46c1; /* Active track color (purple) */
+        }
+
+        .theme-toggle-circle {
+            width: 24px; /* Size of the circle */
+            height: 24px; /* Size of the circle */
+            background-color: #e0b0ff; /* Circle color (light purple) */
+            border-radius: 50%;
+            position: absolute;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle-button.active .theme-toggle-circle {
+            transform: translateX(30px); /* Move to the right for active state */
+        }
         `}
       </style>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 w-full bg-gray-900 bg-opacity-90 z-40 shadow-lg py-4 px-4 md:px-8 lg:px-16 flex flex-col md:flex-row justify-between items-center backdrop-blur-sm">
-        <div className="text-white text-3xl font-extrabold tracking-wider mb-4 md:mb-0 font-cinzel">
+      <header className={`fixed top-0 left-0 w-full ${themeClasses.headerBg} bg-opacity-90 z-40 shadow-lg py-4 px-4 md:px-8 lg:px-16 flex flex-col md:flex-row justify-between items-center backdrop-blur-sm transition-colors duration-500`}>
+        <div className={`text-3xl font-extrabold tracking-wider mb-4 md:mb-0 font-cinzel ${themeClasses.headerText}`}>
           {/* Changed href from "#" to "/" for better accessibility and semantic correctness */}
-          <a href="/" onClick={(e) => { e.preventDefault(); navigate('home'); }} className="hover:text-purple-400 transition-colors duration-300">PC SHIVAN</a>
+          <a href="/" onClick={(e) => { e.preventDefault(); navigate('home'); }} className={`${themeClasses.headerHover} transition-colors duration-300`}>PC SHIVAN</a>
         </div>
         <nav className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2 text-lg font-inter">
-          <button onClick={() => navigate('home')} className="text-gray-300 hover:text-purple-400 transition-colors duration-300 font-semibold transform hover:scale-105">Home</button>
-          <button onClick={() => navigate('about')} className="text-gray-300 hover:text-purple-400 transition-colors duration-300 font-semibold transform hover:scale-105">About</button>
-          <button onClick={() => navigate('music')} className="text-gray-300 hover:text-purple-400 transition-colors duration-300 font-semibold transform hover:scale-105">Music</button>
-          <button onClick={() => navigate('merch')} className="text-gray-300 hover:text-purple-400 transition-colors duration-300 font-semibold transform hover:scale-105">Merch</button>
-          <button onClick={() => navigate('testimonials')} className="text-gray-300 hover:text-purple-400 transition-colors duration-300 font-semibold transform hover:scale-105">Testimonials</button>
-          <button onClick={() => navigate('contact')} className="text-gray-300 hover:text-purple-400 transition-colors duration-300 font-semibold transform hover:scale-105">Contact</button>
+          <button onClick={() => navigate('home')} className={`${themeClasses.mainText} ${themeClasses.headerHover} transition-colors duration-300 font-semibold transform hover:scale-105`}>Home</button>
+          <button onClick={() => navigate('about')} className={`${themeClasses.mainText} ${themeClasses.headerHover} transition-colors duration-300 font-semibold transform hover:scale-105`}>About</button>
+          <button onClick={() => navigate('music')} className={`${themeClasses.mainText} ${themeClasses.headerHover} transition-colors duration-300 font-semibold transform hover:scale-105`}>Music</button>
+          <button onClick={() => navigate('merch')} className={`${themeClasses.mainText} ${themeClasses.headerHover} transition-colors duration-300 font-semibold transform hover:scale-105`}>Merch</button>
+          <button onClick={() => navigate('testimonials')} className={`${themeClasses.mainText} ${themeClasses.headerHover} transition-colors duration-300 font-semibold transform hover:scale-105`}>Testimonials</button>
+          <button onClick={() => navigate('contact')} className={`${themeClasses.mainText} ${themeClasses.headerHover} transition-colors duration-300 font-semibold transform hover:scale-105`}>Contact</button>
         </nav>
       </header>
 
@@ -719,25 +854,25 @@ const App = () => {
         {(() => {
           switch (currentPage) {
             case 'home':
-              return <HomePage scrollToSection={scrollToSection} />;
+              return <HomePage scrollToSection={scrollToSection} themeClasses={themeClasses} />;
             case 'about':
-              return <AboutPage />;
+              return <AboutPage themeClasses={themeClasses} />;
             case 'music':
-              return <MusicPage />;
+              return <MusicPage themeClasses={themeClasses} />;
             case 'merch':
-              return <MerchPage />;
+              return <MerchPage themeClasses={themeClasses} />;
             case 'contact':
-              return <ContactPage openContactModal={openContactModal} />;
+              return <ContactPage openContactModal={openContactModal} themeClasses={themeClasses} />;
             case 'testimonials':
-              return <TestimonialsPage userId={userId} db={db} />;
+              return <TestimonialsPage userId={userId} db={db} themeClasses={themeClasses} />;
             default:
-              return <HomePage scrollToSection={scrollToSection} />;
+              return <HomePage scrollToSection={scrollToSection} themeClasses={themeClasses} />;
           }
         })()}
       </main>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-t from-gray-950 to-gray-900 py-10 px-4 md:px-8 lg:px-16 text-center text-gray-400 border-t border-purple-800">
+      <footer className={`${themeClasses.footerBg} py-10 px-4 md:px-8 lg:px-16 text-center ${themeClasses.mainText} border-t ${themeClasses.footerBorder} transition-colors duration-500`}>
         <div className="mb-6">
           <SocialIcon href="https://www.instagram.com/pcshivanofficial" iconClass="fab fa-instagram" label="Instagram" />
           <SocialIcon href="https://www.linkedin.com/in/pcshivan" iconClass="fab fa-linkedin-in" label="LinkedIn" />
@@ -751,55 +886,55 @@ const App = () => {
       </footer>
 
       {/* Contact Modal */}
-      <Modal isOpen={showContactModal} onClose={closeContactModal}>
-        <h3 className="text-3xl font-bold text-purple-400 mb-6 text-center font-cinzel">
+      <Modal isOpen={showContactModal} onClose={closeContactModal} themeClasses={themeClasses}>
+        <h3 className={`text-3xl font-bold ${themeClasses.accentText} mb-6 text-center font-cinzel`}>
           {getContactSubject(contactFormType)}
         </h3>
         <form onSubmit={handleContactSubmit}>
           <div className="mb-4">
-            <label htmlFor="contact-name" className="block text-gray-300 text-lg font-bold mb-2">Your Name:</label>
+            <label htmlFor="contact-name" className={`block ${themeClasses.mainText} text-lg font-bold mb-2`}>Your Name:</label>
             <input
               type="text"
               id="contact-name"
               name="name"
-              className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 transition-colors duration-200"
+              className={`w-full p-3 rounded-lg ${themeClasses.inputBg} ${themeClasses.mainText} border ${themeClasses.inputBorder} focus:outline-none ${themeClasses.inputFocusBorder} transition-colors duration-200`}
               required
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="contact-email" className="block text-gray-300 text-lg font-bold mb-2">Your Email:</label>
+            <label htmlFor="contact-email" className={`block ${themeClasses.mainText} text-lg font-bold mb-2`}>Your Email:</label>
             <input
               type="email"
               id="contact-email"
               name="email"
-              className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 transition-colors duration-200"
+              className={`w-full p-3 rounded-lg ${themeClasses.inputBg} ${themeClasses.mainText} border ${themeClasses.inputBorder} focus:outline-none ${themeClasses.inputFocusBorder} transition-colors duration-200`}
               required
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="contact-subject" className="block text-gray-300 text-lg font-bold mb-2">Subject:</label>
+            <label htmlFor="contact-subject" className={`block ${themeClasses.mainText} text-lg font-bold mb-2`}>Subject:</label>
             <input
               type="text"
               id="contact-subject"
               name="subject"
               value={getContactSubject(contactFormType)}
               readOnly
-              className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 cursor-not-allowed"
+              className={`w-full p-3 rounded-lg ${themeClasses.inputBg} ${themeClasses.mainText} border ${themeClasses.inputBorder} focus:outline-none ${themeClasses.inputFocusBorder} cursor-not-allowed`}
             />
           </div>
           <div className="mb-6">
-            <label htmlFor="contact-message" className="block text-gray-300 text-lg font-bold mb-2">Message:</label>
+            <label htmlFor="contact-message" className={`block ${themeClasses.mainText} text-lg font-bold mb-2`}>Message:</label>
             <textarea
               id="contact-message"
               name="message"
               rows="5"
-              className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500 resize-y transition-colors duration-200"
+              className={`w-full p-3 rounded-lg ${themeClasses.inputBg} ${themeClasses.mainText} border ${themeClasses.inputBorder} focus:outline-none ${themeClasses.inputFocusBorder} resize-y transition-colors duration-200`}
               required
             ></textarea>
           </div>
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white font-bold py-3 px-6 rounded-lg text-xl transition-colors duration-300 transform hover:scale-105 shadow-lg cursor-pointer"
+            className={`w-full ${themeClasses.buttonPrimaryBg} ${themeClasses.buttonPrimaryHover} text-white font-bold py-3 px-6 rounded-lg text-xl transition-colors duration-300 transform hover:scale-105 shadow-lg cursor-pointer`}
           >
             Send Message
           </button>
@@ -811,7 +946,19 @@ const App = () => {
         message={messageBox?.message}
         type={messageBox?.type}
         onClose={() => setMessageBox(null)}
+        themeClasses={themeClasses}
       />
+
+      {/* Theme Slider Button */}
+      <div className="theme-slider-container">
+        <span className="theme-slider-label">Theme:</span>
+        <div
+          className={`theme-toggle-button ${currentThemeId === 'dark-purple' ? 'active' : ''}`}
+          onClick={() => setCurrentThemeId(currentThemeId === 'dark-purple' ? 'dark-blue' : 'dark-purple')}
+        >
+          <div className="theme-toggle-circle"></div>
+        </div>
+      </div>
     </div>
   );
 };
