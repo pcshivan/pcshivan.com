@@ -70,7 +70,7 @@ const App = () => {
   useEffect(() => {
     const initializeFirebase = async () => {
       if (!auth || !db) {
-        setMessageBox({ type: 'error', message: 'Firebase is not configured correctly. Some features may not work. Please ensure REACT_APP_APP_ID and REACT_APP_FIREBASE_CONFIG environment variables are set in Cloudflare Pages.' });
+        setMessageBox({ type: 'error', message: 'Firebase is not configured correctly. Some features may not work. Please ensure REACT_APP_APP_ID and REACT_APP_FIREBASE_CONFIG environment variables are set in Cloudflare Workers settings.' });
         console.error("Firebase Auth or DB is not initialized. Check firebaseConfig and global variables.");
         return;
       }
