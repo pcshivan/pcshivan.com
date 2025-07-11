@@ -1,8 +1,9 @@
+<!-- File: public/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="https://placehold.co/32x32/1a1a2e/e0b0ff?text=PS" />
+    <link rel="icon" href="./favicon.ico" /> <!-- Ensure favicon path is relative -->
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
     <meta
@@ -10,6 +11,190 @@
         content="PC Shivan Official Website - Innovative Music Composer"
     />
     <title>PC Shivan - Official Website</title>
+
+    <!-- Global CSS & Fonts - Moved here for proper loading -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" xintegrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0V4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet" />
+    <!-- Tailwind CSS CDN - Moved here for proper loading -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for scrollbar and drop-shadow, as Tailwind CDN doesn't process arbitrary values */
+        body {
+          font-family: 'Inter', sans-serif;
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #1a1a2e;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #6b46c1;
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #805ad5;
+        }
+        .drop-shadow-lg {
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Keyframe for subtle pulsing background */
+        @keyframes pulse-subtle {
+          0% { opacity: 0.8; }
+          50% { opacity: 0.85; }
+          100% { opacity: 0.8; }
+        }
+        .animate-pulse-subtle {
+          animation: pulse-subtle 10s infinite ease-in-out;
+        }
+
+        /* Keyframes for fade-in and scale animations for a seamless feel */
+        @keyframes fade-in-up-hero {
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up-hero {
+          animation: fade-in-up-hero 1.2s ease-out forwards;
+        }
+
+        @keyframes fade-in-up-slow {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in-up-slow {
+          animation: fade-in-up-slow 1s ease-out forwards;
+        }
+
+        @keyframes fade-in-left-slow {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .animate-fade-in-left-slow {
+          animation: fade-in-left-slow 1s ease-out forwards;
+        }
+
+        @keyframes fade-in-right-slow {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        .animate-fade-in-right-slow {
+          animation: fade-in-right-slow 1s ease-out forwards;
+        }
+
+        @keyframes fade-in-item {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-item {
+          animation: fade-in-item 0.7s ease-out forwards;
+        }
+
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out forwards;
+        }
+
+        @keyframes scale-in {
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in {
+          animation: scale-in 0.3s ease-out forwards;
+        }
+
+        /* Ensure cursor pointer for all clickable elements */
+        button, a {
+          cursor: pointer;
+        }
+
+        /* Theme slider specific styles */
+        .theme-slider-container {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            background-color: rgba(30, 30, 50, 0.8); /* Dark translucent background */
+            padding: 10px 15px;
+            border-radius: 9999px; /* Pill shape */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+            border: 1px solid rgba(128, 90, 213, 0.5); /* Purple border */
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+
+        .theme-slider-label {
+            color: #e0b0ff; /* Purple accent text */
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .theme-toggle-button {
+            width: 60px; /* Width of the toggle button */
+            height: 30px; /* Height of the toggle button */
+            background-color: #4a4a6a; /* Default track color */
+            border-radius: 15px; /* Half of height for pill shape */
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            padding: 0 3px;
+        }
+
+        .theme-toggle-button.active {
+            background-color: #6b46c1; /* Active track color (purple) */
+        }
+
+        .theme-toggle-circle {
+            width: 24px; /* Size of the circle */
+            height: 24px; /* Size of the circle */
+            background-color: #e0b0ff; /* Circle color (light purple) */
+            border-radius: 50%;
+            position: absolute;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle-button.active .theme-toggle-circle {
+            transform: translateX(30px); /* Move to the right for active state */
+        }
+        `}
+      </style>
 </head>
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
