@@ -4,11 +4,17 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from 'firebase/firestore'; // 'orderBy' removed from import
 
-// Ensure these global variables are defined in the Canvas environment
-// ESLint is now aware of these globals due to the comment above.
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+// Firebase configuration for deployed environment (read from environment variables)
+// In Cloudflare, you will set REACT_APP_APP_ID and REACT_APP_FIREBASE_CONFIG
+const deployedAppId = process.env.REACT_APP_APP_ID || 'default-app-id-deployed';
+const deployedFirebaseConfig = process.env.REACT_APP_FIREBASE_CONFIG ? JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG) : {};
+
+// Use Canvas globals if available (for Canvas environment), otherwise use deployed values
+const appId = typeof __app_id !== 'undefined' ? __app_id : deployedAppId;
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : deployedFirebaseConfig;
+// __initial_auth_token is specific to Canvas; for deployed app, rely on standard Firebase auth flow
 const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
 
 // Initialize Firebase outside of the component to avoid re-initialization
 let app;
@@ -485,12 +491,13 @@ const App = () => {
       }
 
       try {
+        // For deployed app, initialAuthToken is null, so it will sign in anonymously
         if (initialAuthToken) {
           await signInWithCustomToken(auth, initialAuthToken);
-          console.log("Signed in with custom token.");
+          console.log("Signed in with custom token (Canvas environment).");
         } else {
           await signInAnonymously(auth);
-          console.log("Signed in anonymously.");
+          console.log("Signed in anonymously (Deployed environment).");
         }
 
         onAuthStateChanged(auth, (user) => {
@@ -567,7 +574,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-gray-950 font-inter">
       {/* Font Awesome for icons */}
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" xintegrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0V4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0V4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
       {/* Google Fonts for Inter and Cinzel */}
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet" />
       {/* Tailwind CSS */}
