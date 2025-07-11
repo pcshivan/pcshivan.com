@@ -7,7 +7,7 @@
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
     "firebase": "^10.12.2",
-    "@cloudflare/kv-asset-handler": "^0.3.0" // <-- THIS IS NOW IN DEPENDENCIES
+    "@cloudflare/kv-asset-handler": "^0.3.0"
   },
   "devDependencies": {
     "wrangler": "^3.27.0"
