@@ -151,14 +151,10 @@ const App = () => {
 
   return (
     <div className={`min-h-screen ${themeClasses.bodyBg} font-inter transition-colors duration-500`}>
-      {/* Font Awesome for icons */}
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0V4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
-      {/* Google Fonts for Inter and Cinzel */}
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet" />
-      {/* Tailwind CSS */}
-      <script src="https://cdn.tailwindcss.com"></script>
+      {/* Font Awesome, Google Fonts, and Tailwind CSS CDN are now in public/index.html */}
       <style>
         {`
+        /* Custom styles for scrollbar and drop-shadow, as Tailwind CDN doesn't process arbitrary values */
         body {
           font-family: 'Inter', sans-serif;
           margin: 0;
@@ -166,7 +162,6 @@ const App = () => {
           box-sizing: border-box;
           overflow-x: hidden; /* Prevent horizontal scroll */
         }
-        /* Custom scrollbar for a sleek look */
         ::-webkit-scrollbar {
           width: 8px;
         }
@@ -369,11 +364,11 @@ const App = () => {
       {/* Footer */}
       <footer className={`${themeClasses.footerBg} py-10 px-4 md:px-8 lg:px-16 text-center ${themeClasses.mainText} border-t ${themeClasses.footerBorder} transition-colors duration-500`}>
         <div className="mb-6">
-          <SocialIcon href="https://www.instagram.com/pcshivanofficial" iconClass="fab fa-instagram" label="Instagram" />
-          <SocialIcon href="https://www.linkedin.com/in/pcshivan" iconClass="fab fa-linkedin-in" label="LinkedIn" />
-          <SocialIcon href="https://x.com/pcshivan" iconClass="fab fa-twitter" label="X (Twitter)" />
-          <SocialIcon href="https://www.facebook.com/pcshivan" iconClass="fab fa-facebook-f" label="Facebook" />
-          <SocialIcon href="https://open.spotify.com/artist/pcshivanofficial" iconClass="fab fa-spotify" label="Spotify" />
+          <SocialIcon href="[https://www.instagram.com/pcshivanofficial](https://www.instagram.com/pcshivanofficial)" iconClass="fab fa-instagram" label="Instagram" />
+          <SocialIcon href="[https://www.linkedin.com/in/pcshivan](https://www.linkedin.com/in/pcshivan)" iconClass="fab fa-linkedin-in" label="LinkedIn" />
+          <SocialIcon href="[https://x.com/pcshivan](https://x.com/pcshivan)" iconClass="fab fa-twitter" label="X (Twitter)" />
+          <SocialIcon href="[https://www.facebook.com/pcshivan](https://www.facebook.com/pcshivan)" iconClass="fab fa-facebook-f" label="Facebook" />
+          <SocialIcon href="[https://open.spotify.com/artist/pcshivanofficial](https://open.spotify.com/artist/pcshivanofficial)" iconClass="fab fa-spotify" label="Spotify" />
         </div>
         <p className="text-sm mb-2 font-inter">&copy; {new Date().getFullYear()} PC Shivan. All rights reserved.</p>
         <p className="text-xs font-inter">Built with passion and cutting-edge technology.</p>
