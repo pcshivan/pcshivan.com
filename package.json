@@ -7,7 +7,7 @@
     "react-dom": "^18.3.1",
     "react-scripts": "5.0.1",
     "firebase": "^10.12.2"
-    // "@cloudflare/kv-asset-handler": "^0.3.0" <-- REMOVED FROM HERE
+    // "@cloudflare/kv-asset-handler": "^0.3.0"
   },
   "devDependencies": {
     "wrangler": "^3.27.0"
@@ -17,7 +17,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "deploy-worker": "npx wrangler deploy" // New script for worker deployment
+    "deploy-worker": "npx wrangler deploy"
   },
   "eslintConfig": {
     "extends": [
