@@ -23,8 +23,8 @@ export const themes = {
     inputFocusBorder: 'focus:border-purple-500',
     modalBg: 'bg-gray-800',
     modalBorder: 'border-purple-600',
-    themeBgStart: 'gray-900',
-    themeBgEnd: 'black',
+    themeBgStartClass: 'from-gray-900', // Full class name
+    themeBgEndClass: 'to-black',       // Full class name
   },
   'dark-blue': {
     id: 'dark-blue', // Add id for easier lookup
@@ -50,7 +50,7 @@ export const themes = {
     inputFocusBorder: 'focus:border-cyan-500',
     modalBg: 'bg-blue-800',
     modalBorder: 'border-cyan-600',
-    themeBgStart: 'blue-900',
-    themeBgEnd: 'black',
+    themeBgStartClass: 'from-blue-900', // Full class name
+    themeBgEndClass: 'to-black',       // Full class name
   },
 };
