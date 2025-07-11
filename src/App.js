@@ -364,11 +364,11 @@ const App = () => {
       {/* Footer */}
       <footer className={`${themeClasses.footerBg} py-10 px-4 md:px-8 lg:px-16 text-center ${themeClasses.mainText} border-t ${themeClasses.footerBorder} transition-colors duration-500`}>
         <div className="mb-6">
-          <SocialIcon href="[https://www.instagram.com/pcshivanofficial](https://www.instagram.com/pcshivanofficial)" iconClass="fab fa-instagram" label="Instagram" />
-          <SocialIcon href="[https://www.linkedin.com/in/pcshivan](https://www.linkedin.com/in/pcshivan)" iconClass="fab fa-linkedin-in" label="LinkedIn" />
-          <SocialIcon href="[https://x.com/pcshivan](https://x.com/pcshivan)" iconClass="fab fa-twitter" label="X (Twitter)" />
-          <SocialIcon href="[https://www.facebook.com/pcshivan](https://www.facebook.com/pcshivan)" iconClass="fab fa-facebook-f" label="Facebook" />
-          <SocialIcon href="[https://open.spotify.com/artist/pcshivanofficial](https://open.spotify.com/artist/pcshivanofficial)" iconClass="fab fa-spotify" label="Spotify" />
+          <SocialIcon href="https://www.instagram.com/pcshivanofficial" iconClass="fab fa-instagram" label="Instagram" />
+          <SocialIcon href="https://www.linkedin.com/in/pcshivan" iconClass="fab fa-linkedin-in" label="LinkedIn" />
+          <SocialIcon href="https://x.com/pcshivan" iconClass="fab fa-twitter" label="X (Twitter)" />
+          <SocialIcon href="https://www.facebook.com/pcshivan" iconClass="fab fa-facebook-f" label="Facebook" />
+          <SocialIcon href="https://open.spotify.com/artist/pcshivanofficial" iconClass="fab fa-spotify" label="Spotify" />
         </div>
         <p className="text-sm mb-2 font-inter">&copy; {new Date().getFullYear()} PC Shivan. All rights reserved.</p>
         <p className="text-xs font-inter">Built with passion and cutting-edge technology.</p>
